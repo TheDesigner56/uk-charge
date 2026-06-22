@@ -1,0 +1,86 @@
+{% extends "ukcharge/base.html" %}
+{% load static %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block body_class %}map-page{% endblock %}
+
+{% block content %}
+<div class="map-layout">
+    <!-- Sidebar Filters -->
+    <aside class="map-sidebar" id="mapSidebar">
+        <div class="map-sidebar-header">
+            <h2>Filters</h2>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close filters">×</button>
+        </div>
+
+        <div class="filter-group">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus" class="filter-select">
+                <option value="all">All Statuses</option>
+                <option value="available">Available</option>
+                <option value="in_use">In Use</option>
+                <option value="out_of_service">Out of Service</option>
+                <option value="unknown">Unknown</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="filterPower">Power</label>
+            <select id="filterPower" class="filter-select">
+                <option value="all">All Power Levels</option>
+                <option value="slow">Slow (&lt;50kW)</option>
+                <option value="rapid">Rapid (50kW+)</option>
+                <option value="ultra">Ultra-Rapid (100kW+)</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="filterConnector">Connector</label>
+            <select id="filterConnector" class="filter-select">
+                <option value="all">All Connectors</option>
+                {% for ct in connector_types %}
+                <option value="{{ ct.name }}">{{ ct.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="filterOperator">Operator</label>
+            <input type="text" id="filterOperator" class="filter-input" placeholder="Filter by operator..." list="operatorList">
+            <datalist id="operatorList">
+                {% for op in operators %}
+                <option value="{{ op }}">
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <div class="filter-group">
+            <button class="btn-secondary btn-full" id="filterReset">Reset Filters</button>
+        </div>
+
+        <div class="filter-stats" id="mapStats">
+            <span class="filter-stat-count">Loading...</span>
+        </div>
+
+        <!-- Legend -->
+        <div class="map-legend">
+            <h3>Legend</h3>
+            <div class="legend-item"><span class="legend-dot legend-available"></span> Available</div>
+            <div class="legend-item"><span class="legend-dot legend-in-use"></span> In Use</div>
+            <div class="legend-item"><span class="legend-dot legend-out-of-service"></span> Out of Service</div>
+            <div class="legend-item"><span class="legend-dot legend-unknown"></span> Unknown</div>
+        </div>
+    </aside>
+
+    <!-- Map -->
+    <div class="map-container">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle filters">⚙ Filters</button>
+        <div id="mapFull" class="map-canvas"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/map.js' %}"></script>
+{% endblock %}

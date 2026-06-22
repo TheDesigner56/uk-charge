@@ -1,0 +1,124 @@
+{% load static %}
+{% load ukcharge_tags %}
+<!DOCTYPE html>
+<html lang="en-GB" class="{% if request.COOKIES.darkmode == 'off' %}light{% else %}dark{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>{% block title %}{{ meta_title|default:"UK Charge — Find EV Charging Points" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ meta_description|default:"Find EV charging points across the UK with live availability." }}{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ og_title|default:meta_title|default:'UK Charge' }}">
+    <meta property="og:description" content="{{ og_description|default:meta_description|default:'Find EV charging points across the UK.' }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="UK Charge">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ og_title|default:meta_title|default:'UK Charge' }}">
+    <meta name="twitter:description" content="{{ og_description|default:meta_description|default:'Find EV charging points across the UK.' }}">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- MapLibre GL -->
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    {% block extra_head %}{% endblock %}
+
+    {% if json_ld %}
+    <script type="application/ld+json">{{ json_ld|safe }}</script>
+    {% endif %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-inner">
+                <a href="{% url 'ukcharge:homepage' %}" class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">UK Charge</span>
+                </a>
+                <button class="nav-toggle" aria-label="Toggle menu" id="navToggle">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="site-nav" id="siteNav">
+                    <a href="{% url 'ukcharge:map' %}">Map</a>
+                    <a href="{% url 'ukcharge:point_list' %}">Points</a>
+                    <a href="{% url 'ukcharge:operator_list' %}">Operators</a>
+                    <a href="{% url 'ukcharge:journey' %}">Journey Planner</a>
+                    <a href="{% url 'ukcharge:search' %}">Search</a>
+                </nav>
+                <button class="theme-toggle" aria-label="Toggle theme" id="themeToggle">
+                    <span class="theme-icon-dark">🌙</span>
+                    <span class="theme-icon-light">☀️</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ad slot: header -->
+    {% if show_ads %}
+    <div class="ad-slot ad-header" data-slot="{{ ad_slots.header }}">
+        <!-- Header advertisement -->
+    </div>
+    {% endif %}
+
+    <!-- Main content -->
+    <main class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>UK Charge</h4>
+                    <p>Find EV charging points across the UK with live availability status.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="{% url 'ukcharge:map' %}">Map</a></li>
+                        <li><a href="{% url 'ukcharge:point_list' %}">All Points</a></li>
+                        <li><a href="{% url 'ukcharge:operator_list' %}">Operators</a></li>
+                        <li><a href="{% url 'ukcharge:journey' %}">Journey Planner</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Data</h4>
+                    <ul>
+                        <li><a href="/api/points/">API</a></li>
+                        <li><a href="/sitemap.xml">Sitemap</a></li>
+                        <li><a href="/robots.txt">Robots</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>About</h4>
+                    <p>Powered by <a href="https://openchargemap.org/" target="_blank" rel="noopener">Open Charge Map</a></p>
+                    <p>Data © Open Charge Map contributors</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 UK Charge. EV charging point finder for the United Kingdom.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

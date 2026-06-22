@@ -1,0 +1,22 @@
+{% load ukcharge_tags %}
+<div id="nearbyResults">
+    {% if results %}
+    <div class="grid grid-list">
+        {% for item in results %}
+        <a href="{{ item.point.get_absolute_url }}" class="card card-clickable nearby-card">
+            <div class="card-header">
+                <span class="card-power">{% power_badge item.point.power_kw %}</span>
+                {% status_badge item.point.status %}
+            </div>
+            <h3 class="card-title">{{ item.point.name }}</h3>
+            <p class="card-meta">{{ item.point.town|default:"—" }}</p>
+            <div class="card-footer">
+                <span class="card-distance">{% distance_badge item.distance_km %}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">No charging points found nearby.</p>
+    {% endif %}
+</div>

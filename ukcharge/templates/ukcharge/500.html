@@ -1,0 +1,11 @@
+{% extends "ukcharge/base.html" %}
+{% block title %}Server Error — UK Charge{% endblock %}
+{% block content %}
+<section class="section section-top">
+    <div class="container error-page">
+        <h1 class="error-code">500</h1>
+        <p class="error-message">Something went wrong on our end. We're working on it.</p>
+        <a href="{% url 'ukcharge:homepage' %}" class="btn-primary">← Back to Home</a>
+    </div>
+</section>
+{% endblock %}

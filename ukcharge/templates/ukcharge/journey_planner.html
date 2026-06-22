@@ -1,0 +1,65 @@
+{% extends "ukcharge/base.html" %}
+{% load static %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="section section-top">
+    <div class="container">
+        <h1 class="page-title">Journey Planner</h1>
+        <p class="page-subtitle">Find EV charging points along your route across the UK</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="journey-form">
+            <div class="journey-input-group">
+                <label for="startLocation">Start Location</label>
+                <input type="text" id="startLocation" placeholder="Enter start point (town, postcode, or click map)" class="filter-input">
+                <input type="hidden" id="startLat">
+                <input type="hidden" id="startLon">
+            </div>
+
+            <div class="journey-input-group">
+                <label for="endLocation">Destination</label>
+                <input type="text" id="endLocation" placeholder="Enter destination (town, postcode, or click map)" class="filter-input">
+                <input type="hidden" id="endLat">
+                <input type="hidden" id="endLon">
+            </div>
+
+            <div class="journey-input-group">
+                <label for="corridorWidth">Search Width</label>
+                <select id="corridorWidth" class="filter-select">
+                    <option value="5">5 miles</option>
+                    <option value="10" selected>10 miles</option>
+                    <option value="15">15 miles</option>
+                    <option value="20">20 miles</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" id="planJourneyBtn">Plan Journey</button>
+        </div>
+
+        <!-- Map for picking locations -->
+        <div id="journeyMap" class="journey-map"></div>
+
+        <!-- Results -->
+        <div id="journeyResults" class="journey-results" style="display:none;">
+            <h2 class="section-title">Charging Points Along Your Route</h2>
+            <div id="journeyResultsList" class="grid grid-list"></div>
+        </div>
+
+        <!-- Loading -->
+        <div id="journeyLoading" class="loading-state" style="display:none;">
+            <p>Finding chargers along your route...</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/journey.js' %}"></script>
+{% endblock %}

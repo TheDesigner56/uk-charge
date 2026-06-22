@@ -1,0 +1,99 @@
+{% extends "ukcharge/base.html" %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="section section-top">
+    <div class="container">
+        <h1 class="page-title">Nearby Charging Points</h1>
+
+        {% if needs_location %}
+        <div class="location-prompt">
+            <p>Share your location to find nearby charging points.</p>
+            <button class="btn-primary" id="getLocationBtn">📍 Use My Location</button>
+        </div>
+
+        <div class="manual-location">
+            <h3>Or enter manually:</h3>
+            <form action="{% url 'ukcharge:nearby' %}" method="get" class="form-inline">
+                <input type="number" name="lat" placeholder="Latitude" step="0.0001" class="filter-input">
+                <input type="number" name="lon" placeholder="Longitude" step="0.0001" class="filter-input">
+                <input type="number" name="radius" placeholder="Radius (miles)" value="10" step="1" class="filter-input">
+                <button type="submit" class="btn-primary">Search</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="nearby-controls">
+            <form action="{% url 'ukcharge:nearby' %}" method="get" class="form-inline">
+                <input type="hidden" name="lat" value="{{ lat }}">
+                <input type="hidden" name="lon" value="{{ lon }}">
+                <label>Radius:</label>
+                <input type="range" name="radius" min="1" max="50" value="{{ radius|floatformat:'0' }}" class="filter-range" id="radiusSlider">
+                <span id="radiusValue">{{ radius|floatformat:'0' }} miles</span>
+                <button type="submit" class="btn-secondary btn-small">Update</button>
+            </form>
+        </div>
+
+        <p class="search-meta">Found {{ total }} charging point{{ total|pluralize }} within {{ radius }} miles</p>
+
+        <div id="nearbyResults">
+            {% if results %}
+            <div class="grid grid-list">
+                {% for item in results %}
+                <a href="{{ item.point.get_absolute_url }}" class="card card-clickable nearby-card">
+                    <div class="card-header">
+                        <span class="card-power">{% power_badge item.point.power_kw %}</span>
+                        {% status_badge item.point.status %}
+                    </div>
+                    <h3 class="card-title">{{ item.point.name }}</h3>
+                    <p class="card-meta">{{ item.point.town|default:"—" }}</p>
+                    <div class="card-footer">
+                        <span class="card-distance">{% distance_badge item.distance_km %} ({{ item.distance_miles }}mi)</span>
+                        <span class="card-operator">{{ item.point.operator_name|default:"Unknown" }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-large">
+                <p>No charging points found within {{ radius }} miles.</p>
+                <p>Try increasing the search radius.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Geolocation
+document.getElementById('getLocationBtn')?.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        alert('Geolocation not supported by your browser');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            window.location.href = `{% url 'ukcharge:nearby' %}?lat=${lat}&lon=${lon}&radius=10`;
+        },
+        (err) => alert('Unable to get location: ' + err.message),
+        { timeout: 10000 }
+    );
+});
+
+// Radius slider
+const slider = document.getElementById('radiusSlider');
+const valDisplay = document.getElementById('radiusValue');
+if (slider && valDisplay) {
+    slider.addEventListener('input', (e) => {
+        valDisplay.textContent = e.target.value + ' miles';
+    });
+}
+</script>
+{% endblock %}

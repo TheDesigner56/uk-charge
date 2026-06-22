@@ -1,0 +1,179 @@
+{% extends "ukcharge/base.html" %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="section section-top">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="{% url 'ukcharge:homepage' %}">Home</a> →
+            <a href="{% url 'ukcharge:point_list' %}">Charging Points</a> →
+            <span>{{ point.name }}</span>
+        </nav>
+
+        <div class="detail-layout">
+            <!-- Main Detail -->
+            <div class="detail-main">
+                <div class="detail-header">
+                    <div class="detail-header-left">
+                        <h1 class="page-title">{{ point.name }}</h1>
+                        <p class="page-subtitle">{{ point.full_address|default:"Address not available" }}</p>
+                    </div>
+                    <div class="detail-header-right">
+                        {% status_badge point.status %}
+                        {% if point.is_live_status %}
+                        <button class="btn-secondary btn-small"
+                                hx-get="{% url 'ukcharge:htmx_live_status' point.ocm_id %}"
+                                hx-trigger="click"
+                                hx-target="#status-refresh"
+                                hx-swap="outerHTML">
+                            🔄 Refresh Status
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="status-refresh">
+                    {% include "ukcharge/_status_badge.html" %}
+                </div>
+
+                <!-- Key Details Grid -->
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Power Output</span>
+                        <span class="detail-value">{% power_badge point.power_kw %}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Max Power</span>
+                        <span class="detail-value">{{ point.display_power }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Number of Points</span>
+                        <span class="detail-value">{{ point.number_of_points }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Operator</span>
+                        <span class="detail-value">
+                            {% if point.operator %}
+                            <a href="{{ point.operator.get_absolute_url }}">{{ point.operator_name }}</a>
+                            {% else %}
+                            {{ point.operator_name|default:"Unknown" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Usage Type</span>
+                        <span class="detail-value">{{ point.usage_type|default:"—" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Access</span>
+                        <span class="detail-value">{{ point.access_type|default:"—" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Cost</span>
+                        <span class="detail-value">{{ point.usage_cost|default:"—" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Verified</span>
+                        <span class="detail-value">{{ point.last_verified|date:"j M Y"|default:"—" }}</span>
+                    </div>
+                </div>
+
+                <!-- Connectors -->
+                <div class="detail-section">
+                    <h2 class="detail-section-title">Connectors</h2>
+                    <div class="connector-list">
+                        {% for ct in point.connector_types %}
+                        {% connector_badge ct %}
+                        {% empty %}
+                        <p class="empty-state">Connector information not available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="detail-section">
+                    <h2 class="detail-section-title">Address</h2>
+                    <p class="detail-address">{{ point.address|default:"—" }}</p>
+                    <p class="detail-address">{{ point.town|default:"—" }}</p>
+                    <p class="detail-address">{{ point.county|default:"—" }}</p>
+                    <p class="detail-address">{{ point.postcode|default:"—" }}</p>
+                    <p class="detail-address">{{ point.country|default:"United Kingdom" }}</p>
+                </div>
+
+                {% if show_ads %}
+                <div class="ad-slot ad-inline" data-slot="{{ ad_slots.inline }}">
+                    <!-- Inline advertisement -->
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="detail-sidebar">
+                <!-- Map -->
+                <div class="detail-map">
+                    <div id="detailMap" class="map-small"></div>
+                </div>
+
+                <!-- Coordinates -->
+                <div class="detail-sidebar-section">
+                    <h3>Coordinates</h3>
+                    <p class="detail-coords">{{ point.lat|floatformat:6 }}, {{ point.lon|floatformat:6 }}</p>
+                    <a href="https://www.google.com/maps?q={{ point.lat }},{{ point.lon }}" target="_blank" rel="noopener" class="btn-secondary btn-small">Open in Google Maps →</a>
+                </div>
+
+                <!-- Nearby -->
+                {% if nearby %}
+                <div class="detail-sidebar-section">
+                    <h3>Nearby Chargers</h3>
+                    <ul class="nearby-list">
+                        {% for item in nearby %}
+                        <li class="nearby-item">
+                            <a href="{{ item.point.get_absolute_url }}">
+                                <span class="nearby-name">{{ item.point.name }}</span>
+                                <span class="nearby-dist">{% distance_badge item.distance_km %}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Share -->
+                <div class="detail-sidebar-section">
+                    <h3>Share</h3>
+                    <div class="share-buttons">
+                        <a href="https://twitter.com/intent/tweet?text={{ point.name|urlencode }}&url={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="btn-secondary btn-small">Twitter</a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" rel="noopener" class="btn-secondary btn-small">Facebook</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Detail page map
+(function() {
+    const el = document.getElementById('detailMap');
+    if (!el || typeof maplibregl === 'undefined') return;
+    const map = new maplibregl.Map({
+        container: el,
+        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl/style.json',
+        center: [{{ point.lon }}, {{ point.lat }}],
+        zoom: 14,
+        attributionControl: true,
+    });
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    new maplibregl.Marker({ color: '#22c55e' })
+        .setLngLat([{{ point.lon }}, {{ point.lat }}])
+        .setPopup(new maplibregl.Popup().setHTML('<strong>{{ point.name|escapejs }}</strong>'))
+        .addTo(map);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "ukcharge/base.html" %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="section section-top">
+    <div class="container">
+        <h1 class="page-title">Search Results</h1>
+
+        <div class="search-bar">
+            <form action="{% url 'ukcharge:search' %}" method="get" class="search-form">
+                <input type="text" name="q" placeholder="Enter postcode, town, or operator..." class="search-input" value="{{ query|default:'' }}" autocomplete="off" id="searchInput">
+                <button type="submit" class="btn-primary">Search</button>
+            </form>
+        </div>
+
+        {% if query %}
+        <p class="search-meta">Found {{ total }} result{{ total|pluralize }} for "<strong>{{ query }}</strong>"</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if results %}
+        <div class="grid grid-list">
+            {% for point in results %}
+            <a href="{{ point.get_absolute_url }}" class="card card-clickable">
+                <div class="card-header">
+                    <span class="card-power">{% power_badge point.power_kw %}</span>
+                    {% status_badge point.status %}
+                </div>
+                <h3 class="card-title">{{ point.name }}</h3>
+                <p class="card-meta">{{ point.town|default:"—" }}{% if point.postcode %}, {{ point.postcode }}{% endif %}</p>
+                <div class="card-footer">
+                    <span class="card-operator">{{ point.operator_name|default:"Unknown" }}</span>
+                    <span class="card-connectors">{{ point.connector_types|length }} connector{{ point.connector_types|length|pluralize }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        {% if results.has_other_pages %}
+        <nav class="pagination">
+            {% if results.has_previous %}
+            <a href="?q={{ query|urlencode }}&page={{ results.previous_page_number }}" class="btn-secondary">← Previous</a>
+            {% endif %}
+            <span class="pagination-info">Page {{ results.number }} of {{ results.paginator.num_pages }}</span>
+            {% if results.has_next %}
+            <a href="?q={{ query|urlencode }}&page={{ results.next_page_number }}" class="btn-secondary">Next →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% elif query %}
+        <div class="empty-state-large">
+            <p>No charging points found for "{{ query }}".</p>
+            <p>Try searching for a town name, postcode (e.g., "SW1A"), or operator name.</p>
+            <a href="{% url 'ukcharge:homepage' %}" class="btn-primary">Back to Home</a>
+        </div>
+        {% else %}
+        <div class="empty-state-large">
+            <p>Start searching above.</p>
+            <p>Search by town, postcode, charging point name, or operator.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

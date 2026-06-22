@@ -1,0 +1,22 @@
+{% load ukcharge_tags %}
+<div id="searchResults">
+    {% if results %}
+    <div class="grid grid-list">
+        {% for point in results %}
+        <a href="{{ point.get_absolute_url }}" class="card card-clickable">
+            <div class="card-header">
+                <span class="card-power">{% power_badge point.power_kw %}</span>
+                {% status_badge point.status %}
+            </div>
+            <h3 class="card-title">{{ point.name }}</h3>
+            <p class="card-meta">{{ point.town|default:"—" }}</p>
+            <div class="card-footer">
+                <span class="card-operator">{{ point.operator_name|default:"Unknown" }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">No results found for "{{ query }}"</p>
+    {% endif %}
+</div>

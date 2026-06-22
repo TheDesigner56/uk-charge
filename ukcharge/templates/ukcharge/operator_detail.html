@@ -1,0 +1,92 @@
+{% extends "ukcharge/base.html" %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<section class="section section-top">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="{% url 'ukcharge:homepage' %}">Home</a> →
+            <a href="{% url 'ukcharge:operator_list' %}">Operators</a> →
+            <span>{{ operator.name }}</span>
+        </nav>
+
+        <div class="operator-header">
+            <div class="operator-header-left">
+                <h1 class="page-title">{{ operator.name }}</h1>
+                <p class="page-subtitle">{{ total }} charging points across the UK</p>
+            </div>
+            <div class="operator-header-right">
+                {% if operator.website %}
+                <a href="{{ operator.website }}" target="_blank" rel="noopener" class="btn-secondary">Website →</a>
+                {% endif %}
+                {% if operator.phone %}
+                <a href="tel:{{ operator.phone }}" class="btn-secondary">{{ operator.phone }}</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Operator Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ total }}</span>
+                <span class="stat-label">Total Points</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ live_count }}</span>
+                <span class="stat-label">Live Status</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ rapid_count }}</span>
+                <span class="stat-label">Rapid (50kW+)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ avg_power }}kW</span>
+                <span class="stat-label">Avg Power</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ max_power }}kW</span>
+                <span class="stat-label">Max Power</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="grid grid-list">
+            {% for point in page.object_list %}
+            <a href="{{ point.get_absolute_url }}" class="card card-clickable">
+                <div class="card-header">
+                    <span class="card-power">{% power_badge point.power_kw %}</span>
+                    {% status_badge point.status %}
+                </div>
+                <h3 class="card-title">{{ point.name }}</h3>
+                <p class="card-meta">{{ point.town|default:"—" }}{% if point.postcode %}, {{ point.postcode }}{% endif %}</p>
+                <div class="card-footer">
+                    <span class="card-connectors">{{ point.connector_types|length }} connector{{ point.connector_types|length|pluralize }}</span>
+                    <span class="card-points">{{ point.number_of_points }} point{{ point.number_of_points|pluralize }}</span>
+                </div>
+            </a>
+            {% empty %}
+            <p class="empty-state">No charging points found for this operator.</p>
+            {% endfor %}
+        </div>
+
+        {% if page.has_other_pages %}
+        <nav class="pagination">
+            {% if page.has_previous %}
+            <a href="?page={{ page.previous_page_number }}" class="btn-secondary">← Previous</a>
+            {% endif %}
+            <span class="pagination-info">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+            {% if page.has_next %}
+            <a href="?page={{ page.next_page_number }}" class="btn-secondary">Next →</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "ukcharge/base.html" %}
+{% load ukcharge_tags %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <h1 class="hero-title">Find EV Charging Points Near You</h1>
+        <p class="hero-subtitle">{{ stats.total|default:"10,000+" }} charging points across the UK with live availability</p>
+
+        <!-- Search Bar -->
+        <div class="hero-search">
+            <form action="{% url 'ukcharge:search' %}" method="get" class="search-form">
+                <input type="text" name="q" placeholder="Enter postcode, town, or operator..." class="search-input" autocomplete="off" id="heroSearch">
+                <button type="submit" class="btn-primary">Search</button>
+            </form>
+            <div class="hero-actions">
+                <a href="{% url 'ukcharge:map' %}" class="btn-secondary">🗺️ Map View</a>
+                <a href="{% url 'ukcharge:nearby' %}?lat=51.5074&lon=-0.1278" class="btn-secondary">📍 Nearby</a>
+                <a href="{% url 'ukcharge:journey' %}" class="btn-secondary">🚗 Journey Planner</a>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.total|default:"0" }}</span>
+                <span class="stat-label">Charging Points</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.live_count|default:"0" }}</span>
+                <span class="stat-label">Live Status</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.operators|default:"0" }}</span>
+                <span class="stat-label">Operators</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.rapid_count|default:"0" }}</span>
+                <span class="stat-label">Rapid (50kW+)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.ultra_rapid_count|default:"0" }}</span>
+                <span class="stat-label">Ultra-Rapid (100kW+)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.towns|default:"0" }}</span>
+                <span class="stat-label">Towns Covered</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Preview -->
+<section class="map-preview">
+    <div class="container">
+        <h2 class="section-title">Charging Points Map</h2>
+        <div id="mapPreview" class="map-preview-canvas"></div>
+        <div class="map-preview-cta">
+            <a href="{% url 'ukcharge:map' %}" class="btn-primary">View Full Map →</a>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Points -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Recently Added</h2>
+        <div class="grid grid-cards">
+            {% for point in recent_points %}
+            <a href="{{ point.get_absolute_url }}" class="card">
+                <div class="card-header">
+                    <span class="card-power">{% power_badge point.power_kw %}</span>
+                    {% status_badge point.status %}
+                </div>
+                <h3 class="card-title">{{ point.name }}</h3>
+                <p class="card-meta">{{ point.town|default:"Unknown location" }}</p>
+                <div class="card-footer">
+                    <span class="card-operator">{{ point.operator_name|default:"Unknown" }}</span>
+                    <span class="card-connectors">{{ point.connector_types|length }} connector{{ point.connector_types|length|pluralize }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Top Operators -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Top Operators</h2>
+        <div class="grid grid-cards grid-6">
+            {% for op in top_operators %}
+            <a href="{{ op.get_absolute_url }}" class="card card-operator">
+                <h3 class="card-title">{{ op.name }}</h3>
+                <p class="card-meta">{{ op.charging_point_count }} charging points</p>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="section-cta">
+            <a href="{% url 'ukcharge:operator_list' %}" class="btn-secondary">View All Operators →</a>
+        </div>
+    </div>
+</section>
+
+{% if show_ads %}
+<div class="ad-slot ad-inline" data-slot="{{ ad_slots.inline }}">
+    <!-- Inline advertisement -->
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Homepage map preview
+(function() {
+    const mapEl = document.getElementById('mapPreview');
+    if (!mapEl || typeof maplibregl === 'undefined') return;
+
+    const map = new maplibregl.Map({
+        container: mapEl,
+        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl/style.json',
+        center: [-2.5, 54.5],
+        zoom: 5,
+        attributionControl: true,
+    });
+
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
+
+    map.on('load', async () => {
+        try {
+            const resp = await fetch('/htmx/map-points/?bounds=49.5,-8.5,60,2');
+            const data = await resp.json();
+            map.addSource('chargers', {
+                type: 'geojson',
+                data: data,
+            });
+
+            const statusColors = {
+                available: '#22c55e',
+                in_use: '#f59e0b',
+                out_of_service: '#ef4444',
+                unknown: '#6b7280',
+            };
+
+            map.addLayer({
+                id: 'chargers-circle',
+                type: 'circle',
+                source: 'chargers',
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': ['match',
+                        ['get', 'status'],
+                        'available', statusColors.available,
+                        'in_use', statusColors.in_use,
+                        'out_of_service', statusColors.out_of_service,
+                        statusColors.unknown
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#0A0A0A',
+                },
+            });
+
+            const popup = new maplibregl.Popup({ closeButton: false, offset: 10 });
+            map.on('click', 'chargers-circle', (e) => {
+                const f = e.features[0];
+                popup.setLngLat(f.geometry.coordinates)
+                    .setHTML(`<a href="${f.properties.url}"><strong>${f.properties.name}</strong><br>${f.properties.town || ''}</a>`)
+                    .addTo(map);
+            });
+            map.on('mouseenter', 'chargers-circle', () => map.getCanvas().style.cursor = 'pointer');
+            map.on('mouseleave', 'chargers-circle', () => map.getCanvas().style.cursor = '');
+        } catch(e) { console.error('Map error:', e); }
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% load ukcharge_tags %}
+<span class="status-badge-wrapper" id="status-refresh">
+    {% status_badge point.status %}
+    {% if point.is_live_status %}
+    <span class="live-indicator">● LIVE</span>
+    {% endif %}
+    {% if point.last_status_update %}
+    <span class="status-updated">Updated {{ point.last_status_update|timesince }} ago</span>
+    {% endif %}
+</span>
