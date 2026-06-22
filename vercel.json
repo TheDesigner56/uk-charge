@@ -6,21 +6,20 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
+        "runtime": "python3.12",
+        "buildCommand": "bash build.sh",
+        "includeFiles": "staticfiles/**"
       }
     }
   ],
   "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "/ukcharge/wsgi.py"
     }
   ],
   "env": {
-    "DJANGO_SETTINGS_MODULE": "ukcharge.settings"
+    "DJANGO_SETTINGS_MODULE": "ukcharge.settings",
+    "VERCEL": "1"
   }
 }
