@@ -81,21 +81,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "ukcharge.wsgi.application"
 ASGI_APPLICATION = "ukcharge.asgi.application"
 
-# Database: PostGIS for production, sqlite for dev (GIS optional)
+# Database: PostGIS when DATABASE_URL is set, SQLite otherwise
 USE_GIS = False
-if IS_VERCEL or os.environ.get("DATABASE_URL"):
+if os.environ.get("DATABASE_URL"):
     try:
         import dj_database_url
         DATABASES = {
             "default": dj_database_url.parse(
-                os.environ.get("DATABASE_URL"),
+                os.environ["DATABASE_URL"],
                 conn_max_age=600,
             )
         }
-        # Ensure PostGIS extension
-        DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
-        USE_GIS = True
-    except ImportError:
+        # Only use PostGIS if the GIS engine is available
+        try:
+            DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
+            USE_GIS = True
+        except Exception:
+            pass
+    except Exception:
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
