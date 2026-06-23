@@ -42,7 +42,7 @@ class Operator(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("operator_detail", kwargs={"slug": self.slug})
+        return reverse("ukcharge:operator_detail", kwargs={"slug": self.slug})
 
     @property
     def charging_point_count(self):
@@ -160,7 +160,7 @@ class ChargingPoint(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("point_detail", kwargs={"ocm_id": self.ocm_id})
+        return reverse("ukcharge:point_detail", kwargs={"ocm_id": self.ocm_id})
 
     @property
     def coordinates(self):
